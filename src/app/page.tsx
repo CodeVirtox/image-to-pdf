@@ -1,4 +1,26 @@
-'use client';
+export const metadata = {
+  title: 'Image to PDF Converter - PDFGenie',
+  description: 'Convert JPG and PNG images to PDF instantly, securely, and for free.',
+  keywords: ['image to pdf', 'jpg to pdf', 'png to pdf', 'online converter', 'free pdf tool'],
+  robots: 'index, follow',
+  openGraph: {
+    title: 'Image to PDF Converter - PDFGenie',
+    description: 'Convert images to PDF quickly and easily with PDFGenie.',
+    url: 'https://your-domain.com',
+    siteName: 'PDFGenie',
+    images: [
+      {
+        url: 'https://your-domain.com/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'PDFGenie Image to PDF',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+};
+
 import { useState, useRef } from 'react';
 
 export default function ImageToPDF() {
@@ -176,7 +198,7 @@ export default function ImageToPDF() {
 
         <section className="py-16 px-4 sm:px-6 lg:px-8 bg-blue-900 text-white">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-6">Start converting your images now it is free!</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6">Start converting your images now – it is free!</h2>
             <button 
               onClick={() => fileInputRef.current?.click()} 
               className="bg-white text-blue-900 hover:bg-gray-100 font-medium py-3 px-8 rounded-lg transition duration-200"

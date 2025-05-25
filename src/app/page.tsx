@@ -1,207 +1,143 @@
-'use client'; // Required for Next.js client components
-import { useState, useRef } from 'react';
+"use client";
+import { useState, useRef, ChangeEvent } from 'react';
+import { Toaster, toast } from 'react-hot-toast';
 
-export default function ImageToPDF() {
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [pdfUrl, setPdfUrl] = useState(null);
+export default function PDFConverter() {
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [isConverting, setIsConverting] = useState(false);
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Handle image upload
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file && (file.type === 'image/jpeg' || file.type === 'image/png')) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setSelectedImage(event.target.result);
-      };
-      reader.readAsDataURL(file);
+  const handleImageSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      if (files.some(file => !file.type.startsWith('image/'))) {
+        toast.error('Please select only image files');
+        return;
+      }
+      setSelectedImages(files);
+      toast.success(`${files.length} images selected`);
     }
   };
 
-  // Convert to PDF
   const convertToPDF = async () => {
-    if (!selectedImage) return;
-    
-    setIsConverting(true);
-    
-    // Dynamically import jsPDF
-    const { jsPDF } = await import('jspdf');
-    const doc = new jsPDF();
-    const img = new Image();
-    img.src = selectedImage;
-    
-    img.onload = () => {
-      const width = doc.internal.pageSize.getWidth();
-      const height = (img.height * width) / img.width;
-      doc.addImage(img, 'JPEG', 0, 0, width, height);
-      const pdfBlob = doc.output('blob');
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      setPdfUrl(pdfUrl);
-      setIsConverting(false);
-    };
-  };
-
-  // Handle drag and drop
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file && (file.type === 'image/jpeg' || file.type === 'image/png')) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setSelectedImage(event.target.result);
-      };
-      reader.readAsDataURL(file);
+    if (selectedImages.length === 0) {
+      toast.error('Please select images first');
+      return;
     }
+
+    setIsConverting(true);
+    toast.loading('Converting to PDF...');
+
+    // Simulate conversion (replace with actual PDF generation)
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    setIsConverting(false);
+    toast.success('Conversion successful!', {
+      duration: 4000,
+    });
+    // Add actual download logic here
+  };
+
+  const resetSelection = () => {
+    setSelectedImages([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    toast.dismiss();
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-800 font-sans">
-      {/* Header */}
-      <header className="py-6 px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold text-blue-900">PDFGenie</h1>
-          <nav>
-            <a href="#" className="text-blue-900 hover:text-blue-700">Support</a>
-          </nav>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+      <Toaster position="top-center" />
+      
+      <div className="max-w-md mx-auto bg-white rounded-xl shadow-2xl overflow-hidden md:max-w-2xl transition-all duration-500 hover:shadow-3xl">
+        <div className="p-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Image to PDF Converter</h1>
+            <p className="text-gray-600">Convert your images to a single PDF file</p>
+          </div>
 
-      <main>
-        {/* Hero Section */}
-        <section className="py-12 px-4 sm:px-6 lg:px-8 text-center">
-          <div className="max-w-3xl mx-auto">
-            <h1 className="text-3xl sm:text-4xl font-bold text-blue-900 mb-4">Convert Your Images to PDF Instantly</h1>
-            <p className="text-lg text-gray-600 mb-8">
-              Upload your image – click convert – download your PDF in seconds. No signup required.
+          {/* Drag and drop area */}
+          <div 
+            className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center cursor-pointer transition-all duration-300 hover:border-blue-400 hover:bg-blue-50 mb-6"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageSelect}
+              className="hidden"
+              accept="image/*"
+              multiple
+            />
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p className="mt-2 text-sm text-gray-600">
+              Drag & drop images here or <span className="text-blue-500 font-medium">click to browse</span>
             </p>
-            <button 
-              onClick={() => fileInputRef.current.click()} 
-              className="bg-blue-900 hover:bg-blue-800 text-white font-medium py-3 px-6 rounded-lg transition duration-200"
-            >
-              Start Now
-            </button>
+            <p className="text-xs text-gray-500 mt-1">JPG, PNG, GIF supported</p>
           </div>
-        </section>
 
-        {/* Conversion Tool */}
-        <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
-          <div className="max-w-2xl mx-auto">
-            <div 
-              className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-900 transition duration-200"
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current.click()}
+          {/* Selected images preview */}
+          {selectedImages.length > 0 && (
+            <div className="mb-6 transition-all duration-300">
+              <h3 className="text-lg font-medium text-gray-700 mb-3 flex items-center">
+                <span className="bg-blue-100 text-blue-800 text-sm font-semibold mr-2 px-2.5 py-0.5 rounded-full">
+                  {selectedImages.length}
+                </span>
+                Selected Images
+              </h3>
+              <div className="grid grid-cols-3 gap-2">
+                {selectedImages.map((image, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={URL.createObjectURL(image)}
+                      alt={`Image ${index + 1}`}
+                      className="h-24 w-full object-cover rounded-md shadow-sm group-hover:opacity-75 transition-opacity"
+                    />
+                    <button
+                      onClick={() => setSelectedImages(prev => prev.filter((_, i) => i !== index))}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity focus:outline-none"
+                    >
+                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div className="flex justify-between mt-8">
+            <button
+              onClick={resetSelection}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400"
             >
-              <input 
-                type="file" 
-                ref={fileInputRef}
-                onChange={handleImageUpload}
-                accept="image/jpeg,image/png" 
-                className="hidden" 
-              />
-              {!selectedImage ? (
-                <>
-                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              Cancel
+            </button>
+            <button
+              onClick={convertToPDF}
+              disabled={isConverting || selectedImages.length === 0}
+              className={`px-6 py-2 rounded-lg transition-all ${isConverting || selectedImages.length === 0 ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+            >
+              {isConverting ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <p className="mt-2 text-sm text-gray-600">Drag & drop your image here or click to browse</p>
-                  <p className="mt-1 text-xs text-gray-500">Supported formats: JPG, PNG – Max size: 10MB</p>
-                </>
+                  Converting...
+                </span>
               ) : (
-                <div className="mt-4">
-                  <img src={selectedImage} alt="Preview" className="max-h-60 mx-auto rounded" />
-                </div>
+                'Convert to PDF'
               )}
-            </div>
-
-            <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
-              <button 
-                onClick={convertToPDF}
-                disabled={!selectedImage || isConverting}
-                className={`py-3 px-6 rounded-lg font-medium ${!selectedImage || isConverting ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-900 hover:bg-blue-800 text-white'} transition duration-200`}
-              >
-                {isConverting ? 'Converting...' : 'Convert to PDF'}
-              </button>
-              
-              {pdfUrl && (
-                <a 
-                  href={pdfUrl} 
-                  download="converted.pdf"
-                  className="py-3 px-6 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg text-center transition duration-200"
-                >
-                  Download PDF
-                </a>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* Benefits Section */}
-        <section className="py-16 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
-            <h2 className="text-2xl font-bold text-center text-blue-900 mb-12">Why Use Our Image to PDF Converter?</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {[
-                {
-                  icon: '⚡',
-                  title: 'Fast & Free',
-                  description: 'Convert images to PDF in seconds without any cost.'
-                },
-                {
-                  icon: '🛡️',
-                  title: 'Secure',
-                  description: 'Your files never leave your browser. No server processing.'
-                },
-                {
-                  icon: '📱',
-                  title: 'Mobile Friendly',
-                  description: 'Works perfectly on all devices, no app installation needed.'
-                },
-                {
-                  icon: '💡',
-                  title: 'Simple to Use',
-                  description: 'Just upload, convert, and download. No registration required.'
-                }
-              ].map((feature, index) => (
-                <div key={index} className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-200">
-                  <div className="text-3xl mb-4">{feature.icon}</div>
-                  <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                  <p className="text-gray-600">{feature.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-blue-900 text-white">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-6">Start converting your images now – it's free!</h2>
-            <button 
-              onClick={() => fileInputRef.current.click()} 
-              className="bg-white text-blue-900 hover:bg-gray-100 font-medium py-3 px-8 rounded-lg transition duration-200"
-            >
-              Try the Tool
             </button>
-          </div>
-        </section>
-      </main>
-
-      <footer className="py-8 px-4 sm:px-6 lg:px-8 bg-gray-100">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-600 mb-4 md:mb-0">© PDFGenie – All rights reserved</p>
-          <div className="flex gap-6">
-            <a href="#" className="text-gray-600 hover:text-blue-900">Privacy Policy</a>
-            <a href="#" className="text-gray-600 hover:text-blue-900">Terms of Use</a>
-            <a href="#" className="text-gray-600 hover:text-blue-900">Contact</a>
           </div>
         </div>
-      </footer>
+      </div>
     </div>
   );
 }

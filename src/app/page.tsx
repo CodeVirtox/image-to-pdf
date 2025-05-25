@@ -1,59 +1,59 @@
-'use client'; // Required for Next.js client components
+'use client';
 import { useState, useRef } from 'react';
 
 export default function ImageToPDF() {
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [pdfUrl, setPdfUrl] = useState(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isConverting, setIsConverting] = useState(false);
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Handle image upload
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file && (file.type === 'image/jpeg' || file.type === 'image/png')) {
       const reader = new FileReader();
-      reader.onload = (event) => {
-        setSelectedImage(event.target.result);
+      reader.onload = (event: ProgressEvent<FileReader>) => {
+        if (event.target?.result) {
+          setSelectedImage(event.target.result as string);
+        }
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // Convert to PDF
   const convertToPDF = async () => {
     if (!selectedImage) return;
-    
+
     setIsConverting(true);
-    
-    // Dynamically import jsPDF
+
     const { jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     const img = new Image();
     img.src = selectedImage;
-    
+
     img.onload = () => {
       const width = doc.internal.pageSize.getWidth();
       const height = (img.height * width) / img.width;
       doc.addImage(img, 'JPEG', 0, 0, width, height);
       const pdfBlob = doc.output('blob');
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      setPdfUrl(pdfUrl);
+      const generatedPdfUrl = URL.createObjectURL(pdfBlob);
+      setPdfUrl(generatedPdfUrl);
       setIsConverting(false);
     };
   };
 
-  // Handle drag and drop
-  const handleDragOver = (e) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const file = e.dataTransfer.files[0];
+    const file = e.dataTransfer.files?.[0];
     if (file && (file.type === 'image/jpeg' || file.type === 'image/png')) {
       const reader = new FileReader();
-      reader.onload = (event) => {
-        setSelectedImage(event.target.result);
+      reader.onload = (event: ProgressEvent<FileReader>) => {
+        if (event.target?.result) {
+          setSelectedImage(event.target.result as string);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -61,7 +61,6 @@ export default function ImageToPDF() {
 
   return (
     <div className="min-h-screen bg-white text-gray-800 font-sans">
-      {/* Header */}
       <header className="py-6 px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center max-w-7xl mx-auto">
           <h1 className="text-2xl font-bold text-blue-900">PDFGenie</h1>
@@ -72,7 +71,6 @@ export default function ImageToPDF() {
       </header>
 
       <main>
-        {/* Hero Section */}
         <section className="py-12 px-4 sm:px-6 lg:px-8 text-center">
           <div className="max-w-3xl mx-auto">
             <h1 className="text-3xl sm:text-4xl font-bold text-blue-900 mb-4">Convert Your Images to PDF Instantly</h1>
@@ -80,7 +78,7 @@ export default function ImageToPDF() {
               Upload your image – click convert – download your PDF in seconds. No signup required.
             </p>
             <button 
-              onClick={() => fileInputRef.current.click()} 
+              onClick={() => fileInputRef.current?.click()} 
               className="bg-blue-900 hover:bg-blue-800 text-white font-medium py-3 px-6 rounded-lg transition duration-200"
             >
               Start Now
@@ -88,14 +86,13 @@ export default function ImageToPDF() {
           </div>
         </section>
 
-        {/* Conversion Tool */}
         <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
           <div className="max-w-2xl mx-auto">
             <div 
               className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-900 transition duration-200"
               onDragOver={handleDragOver}
               onDrop={handleDrop}
-              onClick={() => fileInputRef.current.click()}
+              onClick={() => fileInputRef.current?.click()}
             >
               <input 
                 type="file" 
@@ -141,7 +138,6 @@ export default function ImageToPDF() {
           </div>
         </section>
 
-        {/* Benefits Section */}
         <section className="py-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-2xl font-bold text-center text-blue-900 mb-12">Why Use Our Image to PDF Converter?</h2>
@@ -178,12 +174,11 @@ export default function ImageToPDF() {
           </div>
         </section>
 
-        {/* CTA Section */}
         <section className="py-16 px-4 sm:px-6 lg:px-8 bg-blue-900 text-white">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-6">Start converting your images now – it's free!</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6">Start converting your images now it is free!</h2>
             <button 
-              onClick={() => fileInputRef.current.click()} 
+              onClick={() => fileInputRef.current?.click()} 
               className="bg-white text-blue-900 hover:bg-gray-100 font-medium py-3 px-8 rounded-lg transition duration-200"
             >
               Try the Tool

@@ -1,102 +1,206 @@
-import Image from "next/image";
+'use client'; // Required for Next.js client components
+import { useState, useRef } from 'react';
 
-export default function Home() {
+export default function ImageToPDF() {
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [pdfUrl, setPdfUrl] = useState(null);
+  const [isConverting, setIsConverting] = useState(false);
+  const fileInputRef = useRef(null);
+
+  // Handle image upload
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file && (file.type === 'image/jpeg' || file.type === 'image/png')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setSelectedImage(event.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Convert to PDF
+  const convertToPDF = async () => {
+    if (!selectedImage) return;
+    
+    setIsConverting(true);
+    
+    // Dynamically import jsPDF
+    const { jsPDF } = await import('jspdf');
+    const doc = new jsPDF();
+    const img = new Image();
+    img.src = selectedImage;
+    
+    img.onload = () => {
+      const width = doc.internal.pageSize.getWidth();
+      const height = (img.height * width) / img.width;
+      doc.addImage(img, 'JPEG', 0, 0, width, height);
+      const pdfBlob = doc.output('blob');
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      setPdfUrl(pdfUrl);
+      setIsConverting(false);
+    };
+  };
+
+  // Handle drag and drop
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && (file.type === 'image/jpeg' || file.type === 'image/png')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setSelectedImage(event.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen bg-white text-gray-800 font-sans">
+      {/* Header */}
+      <header className="py-6 px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center max-w-7xl mx-auto">
+          <h1 className="text-2xl font-bold text-blue-900">PDFGenie</h1>
+          <nav>
+            <a href="#" className="text-blue-900 hover:text-blue-700">Support</a>
+          </nav>
         </div>
+      </header>
+
+      <main>
+        {/* Hero Section */}
+        <section className="py-12 px-4 sm:px-6 lg:px-8 text-center">
+          <div className="max-w-3xl mx-auto">
+            <h1 className="text-3xl sm:text-4xl font-bold text-blue-900 mb-4">Convert Your Images to PDF Instantly</h1>
+            <p className="text-lg text-gray-600 mb-8">
+              Upload your image – click convert – download your PDF in seconds. No signup required.
+            </p>
+            <button 
+              onClick={() => fileInputRef.current.click()} 
+              className="bg-blue-900 hover:bg-blue-800 text-white font-medium py-3 px-6 rounded-lg transition duration-200"
+            >
+              Start Now
+            </button>
+          </div>
+        </section>
+
+        {/* Conversion Tool */}
+        <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
+          <div className="max-w-2xl mx-auto">
+            <div 
+              className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-900 transition duration-200"
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current.click()}
+            >
+              <input 
+                type="file" 
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                accept="image/jpeg,image/png" 
+                className="hidden" 
+              />
+              {!selectedImage ? (
+                <>
+                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <p className="mt-2 text-sm text-gray-600">Drag & drop your image here or click to browse</p>
+                  <p className="mt-1 text-xs text-gray-500">Supported formats: JPG, PNG – Max size: 10MB</p>
+                </>
+              ) : (
+                <div className="mt-4">
+                  <img src={selectedImage} alt="Preview" className="max-h-60 mx-auto rounded" />
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
+              <button 
+                onClick={convertToPDF}
+                disabled={!selectedImage || isConverting}
+                className={`py-3 px-6 rounded-lg font-medium ${!selectedImage || isConverting ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-900 hover:bg-blue-800 text-white'} transition duration-200`}
+              >
+                {isConverting ? 'Converting...' : 'Convert to PDF'}
+              </button>
+              
+              {pdfUrl && (
+                <a 
+                  href={pdfUrl} 
+                  download="converted.pdf"
+                  className="py-3 px-6 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg text-center transition duration-200"
+                >
+                  Download PDF
+                </a>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Benefits Section */}
+        <section className="py-16 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-2xl font-bold text-center text-blue-900 mb-12">Why Use Our Image to PDF Converter?</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {[
+                {
+                  icon: '⚡',
+                  title: 'Fast & Free',
+                  description: 'Convert images to PDF in seconds without any cost.'
+                },
+                {
+                  icon: '🛡️',
+                  title: 'Secure',
+                  description: 'Your files never leave your browser. No server processing.'
+                },
+                {
+                  icon: '📱',
+                  title: 'Mobile Friendly',
+                  description: 'Works perfectly on all devices, no app installation needed.'
+                },
+                {
+                  icon: '💡',
+                  title: 'Simple to Use',
+                  description: 'Just upload, convert, and download. No registration required.'
+                }
+              ].map((feature, index) => (
+                <div key={index} className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-200">
+                  <div className="text-3xl mb-4">{feature.icon}</div>
+                  <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                  <p className="text-gray-600">{feature.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-blue-900 text-white">
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6">Start converting your images now – it's free!</h2>
+            <button 
+              onClick={() => fileInputRef.current.click()} 
+              className="bg-white text-blue-900 hover:bg-gray-100 font-medium py-3 px-8 rounded-lg transition duration-200"
+            >
+              Try the Tool
+            </button>
+          </div>
+        </section>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+
+      <footer className="py-8 px-4 sm:px-6 lg:px-8 bg-gray-100">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
+          <p className="text-gray-600 mb-4 md:mb-0">© PDFGenie – All rights reserved</p>
+          <div className="flex gap-6">
+            <a href="#" className="text-gray-600 hover:text-blue-900">Privacy Policy</a>
+            <a href="#" className="text-gray-600 hover:text-blue-900">Terms of Use</a>
+            <a href="#" className="text-gray-600 hover:text-blue-900">Contact</a>
+          </div>
+        </div>
       </footer>
     </div>
   );
